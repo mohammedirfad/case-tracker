@@ -12,9 +12,21 @@ import { userRouter } from "./routes/userRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 
 export const app = express();
+const allowedOrigins = env.clientUrl.split(",").map((origin) => origin.trim()).filter(Boolean);
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(cors({ origin: env.clientUrl, credentials: true }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true
+  })
+);
 app.use(compression());
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
