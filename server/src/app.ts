@@ -16,17 +16,23 @@ import { errorHandler, notFound } from "./middleware/errorHandler.js";
 export const app = express();
 const allowedOrigins = env.clientUrl.split(",").map((origin) => origin.trim()).filter(Boolean);
 
+app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true
+  cors((req, callback) => {
+    const forwardedProto = req.header("x-forwarded-proto") ?? req.protocol;
+    const sameHostOrigin = `${forwardedProto}://${req.header("host")}`;
+
+    callback(null, {
+      origin(origin, originCallback) {
+        if (!origin || allowedOrigins.includes(origin) || origin === sameHostOrigin) {
+          originCallback(null, true);
+          return;
+        }
+        originCallback(null, false);
+      },
+      credentials: true
+    });
   })
 );
 app.use(compression());
