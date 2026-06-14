@@ -5,7 +5,9 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
 import path from "node:path";
+import swaggerUi from "swagger-ui-express";
 import { env } from "./config/env.js";
+import { openApiDocument } from "./docs/openApi.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { caseRouter } from "./routes/caseRoutes.js";
 import { userRouter } from "./routes/userRoutes.js";
@@ -14,7 +16,7 @@ import { errorHandler, notFound } from "./middleware/errorHandler.js";
 export const app = express();
 const allowedOrigins = env.clientUrl.split(",").map((origin) => origin.trim()).filter(Boolean);
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
   cors({
     origin(origin, callback) {
@@ -41,6 +43,8 @@ app.use(
 
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/uploads", express.static(path.resolve(env.uploadDir)));
+app.get("/api/openapi.json", (_req, res) => res.json(openApiDocument));
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
