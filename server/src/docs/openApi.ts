@@ -1,6 +1,4 @@
-import { OpenAPIV3 } from "openapi-types";
-
-export const openApiDocument: OpenAPIV3.Document = {
+export const openApiDocument = {
   openapi: "3.0.3",
   info: {
     title: "Mini Case Tracker API",
@@ -352,4 +350,4 @@ export const openApiDocument: OpenAPIV3.Document = {
       }
     }
   }
-};
+} as const;
