@@ -7,8 +7,7 @@ export const openApiDocument = {
       "JWT-secured API for managers and agents to create, assign, process, submit, and review client cases."
   },
   servers: [
-    { url: "http://localhost:5000", description: "Local API" },
-    { url: "https://your-render-service.onrender.com", description: "Render API" }
+    { url: "/", description: "Current API host" }
   ],
   tags: [
     { name: "Auth" },
