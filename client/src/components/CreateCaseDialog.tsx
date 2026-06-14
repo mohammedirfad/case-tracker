@@ -24,12 +24,22 @@ export function CreateCaseDialog({ open, agents, onClose }: { open: boolean; age
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const validator = useMemo(
-    () => (values: { clientName: string; subjectName: string; caseType: string; dueDate: string; assignedAgent: string }) => ({
-      ...(values.clientName.length >= 2 ? {} : { clientName: "Client name is required" }),
-      ...(values.subjectName.length >= 2 ? {} : { subjectName: "Subject name is required" }),
-      ...(values.caseType.length >= 2 ? {} : { caseType: "Case type is required" }),
-      ...(values.dueDate ? {} : { dueDate: "Due date is required" })
-    }),
+    () => (values: { clientName: string; subjectName: string; caseType: string; dueDate: string; assignedAgent: string }) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = values.dueDate ? new Date(`${values.dueDate}T00:00:00`) : null;
+
+      return {
+        ...(values.clientName.trim().length >= 2 ? {} : { clientName: "Enter at least 2 characters for client name." }),
+        ...(values.subjectName.trim().length >= 2 ? {} : { subjectName: "Enter at least 2 characters for subject name." }),
+        ...(values.caseType.trim().length >= 2 ? {} : { caseType: "Enter at least 2 characters for case type." }),
+        ...(!values.dueDate
+          ? { dueDate: "Select a due date." }
+          : selectedDate && selectedDate > today
+            ? {}
+            : { dueDate: "Due date must be a future date." })
+      };
+    },
     []
   );
   const form = useFormValidation(
@@ -73,7 +83,7 @@ export function CreateCaseDialog({ open, agents, onClose }: { open: boolean; age
           <TextField label="Client name" value={form.values.clientName} onChange={(e) => form.setField("clientName", e.target.value)} error={Boolean(form.errors.clientName)} helperText={form.errors.clientName} />
           <TextField label="Subject name" value={form.values.subjectName} onChange={(e) => form.setField("subjectName", e.target.value)} error={Boolean(form.errors.subjectName)} helperText={form.errors.subjectName} />
           <TextField label="Case type" value={form.values.caseType} onChange={(e) => form.setField("caseType", e.target.value)} error={Boolean(form.errors.caseType)} helperText={form.errors.caseType} />
-          <TextField label="Due date" type="date" InputLabelProps={{ shrink: true }} value={form.values.dueDate} onChange={(e) => form.setField("dueDate", e.target.value)} error={Boolean(form.errors.dueDate)} helperText={form.errors.dueDate} />
+          <TextField label="Due date" type="date" InputLabelProps={{ shrink: true }} value={form.values.dueDate} onChange={(e) => form.setField("dueDate", e.target.value)} error={Boolean(form.errors.dueDate)} helperText={form.errors.dueDate ?? "Choose tomorrow or a later date."} />
           <TextField select label="Assign agent now" value={form.values.assignedAgent} onChange={(e) => form.setField("assignedAgent", e.target.value)}>
             <MenuItem value="">Keep New</MenuItem>
             {agents.map((agent) => (
